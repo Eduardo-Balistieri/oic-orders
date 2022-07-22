@@ -1,7 +1,7 @@
 class OrdersController {
   static orderImport(req, res) {
     try {
-      const payload = req.body
+      const payload = JSON.parse(req.body.payload)
 
       const orderCouponsMap = []
       const claimedCouponMultiPromotions = []
