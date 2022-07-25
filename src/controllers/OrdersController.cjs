@@ -1,7 +1,12 @@
+const fs = require("fs")
+const path = require("path")
+
 class OrdersController {
   static orderImport(req, res) {
     try {
-      const payload = JSON.parse(req.body.payload)
+      const filePath = path.join(__dirname, "..", "..", "uploads", req.file.filename)
+      const rawdata = fs.readFileSync(filePath)
+      const payload = JSON.parse(rawdata)
 
       const orderCouponsMap = []
       const claimedCouponMultiPromotions = []
@@ -21,10 +26,10 @@ class OrdersController {
           delete info["coupon"]
           claimedCouponMultiPromotions.push({ coupon: key, infoList: [{ ...info }] })
         }
-        if(key in payload["discountInfo"]["unclaimedCouponMultiPromotions"]) {
+        if (key in payload["discountInfo"]["unclaimedCouponMultiPromotions"]) {
           unclaimedCouponMultiPromotions.push(coupon)
         }
-        if(key in payload["discountInfo"]["unclaimedCouponsMap"]) {
+        if (key in payload["discountInfo"]["unclaimedCouponsMap"]) {
           unclaimedCouponsMap.push(coupon)
         }
       })
@@ -44,13 +49,17 @@ class OrdersController {
       formattedPayload["discountInfo"]["unclaimedCouponsMap"] = unclaimedCouponsMap
       formattedPayload["order"]["commerceItems"] = commerceItems
       formattedPayload["order"]["priceInfo"]["orderTotalBySite"] = orderTotalBySite
+
+      fs.unlink(filePath, (err) => {
+        if (err) console.log("Error deleting file:", err.message)
+      })
       res.status(200).json(formattedPayload)
     }
-    catch(err) {
+    catch (err) {
       console.log(err.message)
       res.sendStatus(500)
     }
   }
 }
 
-export default OrdersController
+module.exports = OrdersController
